@@ -30,19 +30,19 @@ from nltk.tokenize import word_tokenize
 
 
 df_1 = pd.read_csv("data/train.csv")
-df_1.head()
+print(df_1.head())
 
 
 # In[3]:
 
 
-df_1.describe()
+print(df_1.describe())
 
 
 # In[4]:
 
 
-df_1.isnull().any()
+print(df_1.isnull().any())
 
 
 # __This is the amount of words in each row with respect to the column__
@@ -53,7 +53,7 @@ df_1.isnull().any()
 # In[5]:
 
 
-np.unique(np.array(df_1['anchor'].apply(lambda x : len(x.split()))))
+print(np.unique(np.array(df_1['anchor'].apply(lambda x : len(x.split())))))
 
 
 # These are the unique amount of words in __target__ column
@@ -61,7 +61,7 @@ np.unique(np.array(df_1['anchor'].apply(lambda x : len(x.split()))))
 # In[6]:
 
 
-np.unique(np.array(df_1['target'].apply(lambda x : len(x.split()))))
+print(np.unique(np.array(df_1['target'].apply(lambda x : len(x.split())))))
 
 
 # We can probably drop __context__ because its a label
@@ -69,7 +69,7 @@ np.unique(np.array(df_1['target'].apply(lambda x : len(x.split()))))
 # In[7]:
 
 
-np.unique(np.array(df_1['context'].apply(lambda x : len(x.split()))))
+print(np.unique(np.array(df_1['context'].apply(lambda x : len(x.split())))))
 
 
 # __Tokenization__
@@ -85,7 +85,7 @@ df_1['anchor'] = df_1['anchor'].apply(lambda x : word_tokenize(x))
 # In[9]:
 
 
-df_1.head()
+print(df_1.head())
 
 
 # __Stopwords Removal__
@@ -102,7 +102,7 @@ df_1['anchor'] = df_1['anchor'].apply(lambda x : [w for w in x if not w in stop_
 # In[11]:
 
 
-df_1.head()
+print(df_1.head())
 
 
 # __Stemming__
@@ -119,7 +119,7 @@ df_1['anchor'] = df_1['anchor'].apply(lambda x: [snowBallStemmer.stem(word) for 
 # In[13]:
 
 
-df_1.head()
+print(df_1.head())
 
 
 # __Need to convert array to just strings__
@@ -134,7 +134,7 @@ df_1['target'] = df_1['target'].apply(lambda x : ','.join(map(str,x)))
 # In[15]:
 
 
-df_1.head()
+print(df_1.head())
 
 
 # These the the unique words in the __anchor__ column 10 are shown below
@@ -142,7 +142,7 @@ df_1.head()
 # In[16]:
 
 
-np.unique(np.array(df_1['anchor']))[:10]
+print(np.unique(np.array(df_1['anchor']))[:10])
 
 
 # These the the unique words in the __target__ column 10 are shown below
@@ -150,7 +150,7 @@ np.unique(np.array(df_1['anchor']))[:10]
 # In[17]:
 
 
-np.unique(np.array(df_1['target']))[:10]
+print(np.unique(np.array(df_1['target']))[:10])
 
 
 # We have the issue of words going together, we need to seperate these so we can
@@ -221,12 +221,12 @@ def encoding_anchor(arr):
     if len(arr) < 2:
         for i in arr:
             #print(labelencoder_anchor.transform([i]))
-            return labelencoder_anchor.transform([i])
+            return int(labelencoder_anchor.transform([i]))
     if len(arr) > 1:
         for i in arr:
             #print(labelencoder_anchor.transform([i]))
             temp.extend(labelencoder_anchor.transform([i]))
-        return temp
+        return np.array(temp)
 
 
 # In[26]:
@@ -237,18 +237,30 @@ def encoding_target(arr):
     if len(arr) < 2:
         for i in arr:
             #print(labelencoder_anchor.transform([i]))
-            return labelencoder_target.transform([i])
+            return int(labelencoder_target.transform([i]))
     if len(arr) > 1:
         for i in arr:
             #print(labelencoder_anchor.transform([i]))
             temp.extend(labelencoder_target.transform([i]))
-        return temp
+        return np.array(temp)
+
+
+# In[ ]:
+
+
+print("encoding anchor")
 
 
 # In[27]:
 
 
 df_1['anchor'] = df_1['anchor'].apply(lambda x: encoding_anchor(x))
+
+
+# In[ ]:
+
+
+print("encoding target")
 
 
 # In[28]:
@@ -260,73 +272,30 @@ df_1['target'] = df_1['target'].apply(lambda x: encoding_target(x))
 # In[29]:
 
 
-df_1.head()
-
-
-# In[30]:
-
-
-# df_1.to_csv("data_file.csv",index=None)
-
-
-# In[31]:
-
-
-# df_1 = pd.read_csv("data_file.csv")
-
-
-# In[32]:
-
-
-df_1.head()
-
-
-# In[22]:
-
-
-
+print(df_1.head())
 
 
 # __Spliting (70/30)__
 # * Here we test/evaluate our models
 
-# convert array
-
-# In[33]:
-
-
-# def string_to_array_numerical(arr):
-#     temp = [arr]
-#     for i in temp:
-#         print(i)
-    
-# string_to_array_numerical('[wood]')
-
-
-# In[34]:
-
-
-# df_1['anchor'].apply(lambda x: )
-
-
-# In[40]:
+# In[37]:
 
 
 # x = df_1.drop(['id','score'],axis=1).values
-x = df_1[['anchor','target']].values
-y = df_1['score'].values
+x = df_1[['anchor','target']].values[:100]
+y = df_1['score'].values[:100]
 
 
-# In[41]:
-
-
-x
-
-
-# In[42]:
+# In[43]:
 
 
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.30, random_state=141)
+
+
+# In[44]:
+
+
+print("Random Forest")
 
 
 # __Random Forest Regressor__
@@ -345,17 +314,10 @@ mae = mean_absolute_error(y_test,y_pred)
 print("Mean Square Error: {} \nRoot Mean Squared Error: {} \nMean Absolute Error: {} ".format(mse,rmse,mae))
 
 
-# __Feature Importance__
-# * This is based on the gini index from the random forest model
-
-# In[38]:
+# In[42]:
 
 
-# features = [df_1.columns[i] for i in range(1,3)]
-# feature_importance_nums = regr.feature_importances_
-# feature_importance_df = pd.DataFrame(feature_importance_nums).transpose()
-# feature_importance_df.columns = features
-# feature_importance_df.head()
+print("Lasso")
 
 
 # __Lasso Regression__
@@ -375,21 +337,3 @@ print("Mean Square Error: {} \nRoot Mean Squared Error: {} \nMean Absolute Error
 
 # __Prediction Submission__
 # * Will be used later for competition
-
-# In[39]:
-
-
-# pd.read_csv("sample_submission.csv").head()
-
-# df_final.head()
-
-# df_final.to_csv("Michael_Woo_Submission.csv",index=False)
-
-# pd.read_csv("Michael_Woo_Submission.csv")
-
-
-# In[ ]:
-
-
-
-
